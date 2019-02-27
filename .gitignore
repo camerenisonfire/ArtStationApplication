@@ -1,0 +1,8 @@
+# Java class files
+
+*.class
+*.jar
+
+#Project files
+[Bb]uild/
+*.properties

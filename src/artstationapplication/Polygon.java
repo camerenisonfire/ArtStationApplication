@@ -323,8 +323,9 @@ public class Polygon extends Shape{
             for(int i = 0; i < vertices.size(); i++){
                 ig.vertex(vertices.get(i).getPositionFloats());
             }
-            ig.endShape(ig.CLOSE);
+            ig.endShape(app.CLOSE);
         }
+        ig.popMatrix();
         return ig;
     }
     

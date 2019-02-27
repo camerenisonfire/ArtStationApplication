@@ -92,9 +92,14 @@ abstract class Shape{
         alt = turn;
     }
 
-    void setStartingRotation(PVector mouse) {
-        startingRotation = rotation - app.atan2(mouse.y - pos.y, mouse.x - pos.x);
-    }
+    public void setName(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return this.name;
+	}
+
     
     
     @Override
@@ -134,6 +139,11 @@ abstract class Shape{
     void manipulate(float x, float y){
         manipulate(new PVector(x,y));
     }
+    
+    
+    void setStartingRotation(PVector mouse) {
+        startingRotation = rotation - app.atan2(mouse.y - pos.y, mouse.x - pos.x);
+    }
 
     void changeRotation(PVector mouse) {         
           rotation = app.atan2(mouse.y - pos.y, mouse.x - pos.x);
@@ -150,8 +160,12 @@ abstract class Shape{
     }
     
     void reset(){
-        //pass
+        rotation = 0;
     }
     
+    //Temporary, remove later or find real solution
+    boolean isPicture(){
+        return false;
+    }
 
 }

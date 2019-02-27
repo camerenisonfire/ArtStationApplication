@@ -207,6 +207,8 @@ public class ArtStationApplication extends PApplet{
         EventHandler<ActionEvent> ToolHandler = new EventHandler<ActionEvent>(){
             public void handle(ActionEvent ae){
                 String name = ((ToggleButton)ae.getTarget()).getText();
+                gui.drawMode.setSelected(true);
+                pad.drawMode();
                 //all tool handling done here
                 switch(name){
                     case "Circle": pad.setActiveTool(ShapeType.CIR); break;
@@ -215,9 +217,18 @@ public class ArtStationApplication extends PApplet{
                     case "Line": pad.setActiveTool(ShapeType.LIN); break;
                     case "Poly": pad.setActiveTool(ShapeType.POL);break;
                     case "Curve": pad.setActiveTool(ShapeType.CUR); break;
+                    case "Picture":
+                        pad.setActiveTool(ShapeType.PIC);
+                        pad.createShape(canvasX, canvasY); 
+                        final FileChooser fileChooser = getImageFileChooser();
+                        File file = fileChooser.showOpenDialog(stage); //arg here is a Window that input will be blocked to until dialog complete (can be null)
+                        if(file != null){ 
+                            pad.createPicture(cleanseFilePath(file.getAbsolutePath()));
+                            pad.completeShape();
+                        }
+                        break;
                 }
-                gui.drawMode.setSelected(true);
-                pad.drawMode();
+
                 canvas.requestFocus(); 
             }
         };
@@ -228,6 +239,7 @@ public class ArtStationApplication extends PApplet{
         gui.btnTriangle.setOnAction(ToolHandler);
         gui.btnPoly.setOnAction(ToolHandler);
         gui.btnCurve.setOnAction(ToolHandler);
+        gui.btnPicture.setOnAction(ToolHandler);
         
         EventHandler<ActionEvent> textHandler = new EventHandler<ActionEvent>(){
             public void handle(ActionEvent ae){
@@ -257,14 +269,7 @@ public class ArtStationApplication extends PApplet{
         gui.heightTextField.setOnAction(textHandler);
         
         gui.btnReferenceImage.setOnAction(event ->{
-            final FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Load Reference Image");
-            fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("PNG", "*.png"),
-                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                new FileChooser.ExtensionFilter("GIF", "*.gif"),
-                new FileChooser.ExtensionFilter("TARGA", "*.tga")
-            );
+            final FileChooser fileChooser = getImageFileChooser();
             File file = fileChooser.showOpenDialog(stage); //arg here is a Window that input will be blocked to until dialog complete (can be null)
             if(file != null){ 
                 PImage loadedImage = loadImage(file.getAbsolutePath());
@@ -509,16 +514,58 @@ public class ArtStationApplication extends PApplet{
             }
         });
         
+		ContextMenu dropDown = new ContextMenu();
+
+		MenuItem rename = new MenuItem("Rename");
+		rename.setOnAction(new EventHandler<ActionEvent>() { //selecting rename on the drop down
+			@Override
+			public void handle(ActionEvent arg0) {
+				try {
+					TextInputDialog nameDialog = new TextInputDialog(gui.shapes.get(pad.listIndex).getName());
+					nameDialog.setTitle("Rename");
+					nameDialog.setHeaderText("Rename the shape");
+					nameDialog.setContentText("Enter new name");
+
+					Optional<String> result = nameDialog.showAndWait();
+					if (result.isPresent()) {
+						gui.shapes.get(gui.selectionModel.getSelectedIndex()).setName(result.get());
+						gui.shapeViewer.refresh();
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+
+				}
+			}
+		});
+		//adding rename option to the dropdown menu .addAll can be used in future for multiple items
+		dropDown.getItems().add(rename); 
+		
+		gui.shapeViewer.setOnContextMenuRequested(new EventHandler<ContextMenuEvent>() {
+			@Override
+			public void handle(ContextMenuEvent event) {
+				if (gui.shapes.size() > 0)
+					dropDown.show(gui.shapeViewer, event.getScreenX(), event.getScreenY());
+			}
+		});
+		
         //Key Events for full scene
         gui.rootNode.addEventFilter(KeyEvent.KEY_PRESSED, event ->{
             switch(event.getCode()){
-                case ESCAPE: pad.drawMode(); break; //doesn't seem to work
-                case CONTROL: pad.toggleGrid(true);
+                case ESCAPE:
+                    pad.drawMode();
+                    event.consume();    //consume so it does not trigger closing the application
+                    break;
+                case CONTROL:
+                    pad.setControl(true);
+                    pad.toggleGrid(true);
                     pad.toggleSnap(true); 
                     dialog = "SNAP and GRID are on.";
                     break;
-                case ALT: pad.setAlt(true); break;
-                case SHIFT: pad.setShift(true); break;
+                case ALT:
+                    pad.setAlt(true);
+                    break;
+                case SHIFT:
+                    pad.setShift(true);
+                    break;
             }
         });
         
@@ -532,6 +579,7 @@ public class ArtStationApplication extends PApplet{
                         deleteShape();
                     }break;
                 case CONTROL: 
+                    pad.setControl(false);
                     pad.toggleGrid(gui.cbGridOn.isSelected());
                     pad.toggleSnap(gui.cbGridSnap.isSelected()); 
                     dialog = "";
@@ -582,7 +630,7 @@ public class ArtStationApplication extends PApplet{
         stage.heightProperty().addListener((obs, oldVal, newVal) -> {
              scaleCanvas((float)(stage.getWidth()-gui.toolBarWidth - gui.controlBarWidth),(float)(stage.getHeight() - 2*gui.mb.getHeight()));
         });
-        
+
 
          pad = new CanvasArea(this,900,900, gui.shapes, tasks);
 
@@ -595,6 +643,19 @@ public class ArtStationApplication extends PApplet{
         });
         canvas.requestFocus(); //needed?
         return mySurface; 
+    }
+    
+    FileChooser getImageFileChooser(){
+            final FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Load Reference Image");
+            //TODO: is there a to show all at once for loading purposes?
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("PNG", "*.png"),
+                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+                new FileChooser.ExtensionFilter("GIF", "*.gif"),
+                new FileChooser.ExtensionFilter("TARGA", "*.tga")
+            );
+            return fileChooser;
     }
     
     @Override 
@@ -670,8 +731,6 @@ public class ArtStationApplication extends PApplet{
             keys[key] = false;
         }
     }
-    
-    
 
     //Uses change operation and stored information to revert shape back to previous state. 
     void undo(Change task){
@@ -770,6 +829,12 @@ public class ArtStationApplication extends PApplet{
             result = -1;
         }
         return result; 
+    }
+    
+    String cleanseFilePath(String path){
+        String cleaned = path.replace("\\", "/");
+        System.out.println(cleaned);
+        return cleaned;
     }
     
     boolean mouseOverCanvas(){
@@ -873,11 +938,16 @@ public class ArtStationApplication extends PApplet{
         exportGraphic.beginDraw();
         if(pad.getBackgroundColor() != gui.NONE) exportGraphic.background(pad.getBackgroundColor());
         for(int i = 0; i < gui.shapes.size(); i++){
-            gui.shapes.get(i).printToPGraphic(exportGraphic);
+            /*
+                Gonna have to use hacky bandaid to skip over Pictures until I can dig into 
+                why SVGs are failing with the image() call. TODO: fix SVGs with Picture 
+                class. Remove out conditional to see bug. 
+            */
+            if(!gui.shapes.get(i).isPicture()) gui.shapes.get(i).printToPGraphic(exportGraphic);
         }
         exportGraphic.dispose();
         exportGraphic.endDraw();
-        dialog = "Image saved in "+location;
+        dialog = "SVG saved in "+location;
     }
     
     //Semicolon is used as delimiter for an object. Comma is delimiter for values. 
