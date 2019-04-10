@@ -1,10 +1,12 @@
 # ArtStationApplication
 
-This application was created as a developer tool to aid in the creation of Processing sketches. Various shapes can be drawn and editted on  screen. The export option can be used output the processing code to your clipboard or to create an image or SVG file. The JAR file is available above in the ArtStation.zip. 
+This application was created as a developer tool to aid in the creation of Processing sketches. Various shapes can be drawn and editted on  screen. See screenshot below:
 
-This application is still in development, please report any issues. 
+![Screenshot](https://github.com/jwilder4690/ArtStationApplication/blob/master/artStationScreenShot2.png)
 
-After more testing/feedback I plan to request this tool get added to the Processing tools. 
+The export option can be used output the processing code to your clipboard or to create an image or SVG file. The JAR file is available above in the ArtStation.zip. This application is still in development, please report any issues. 
+
+Submitted for approval!
 
 ## Contributor/Developer Notes:
 
@@ -26,11 +28,15 @@ I am currently working on developing a testing suite for this project. There are
 
 - [x] Initial launch with all basic functionality 
 - [x] Refactor
-- [ ] Address Issues
-- [ ] Develop testing environment
-    - Unit Tests
-    - Behavior testing
-    - Output testing
+- [x] Prepare for Integration as Processing tool
+  - [x] Drop new release
+  - [x] Complete Requirements listed at https://github.com/processing/processing/wiki/Tool-Guidelines
+  - [x] Submit for approval 
+- [x] Address major Issues
+- [ ] Prepare for final feature drop
+  - [ ] Groups 
+  - [ ] Final bugs
+- [ ] Update Testing Environment
 
 
 
